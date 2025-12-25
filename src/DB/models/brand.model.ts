@@ -11,10 +11,12 @@ export class Brand {
     type: String,
     required: true,
     unique: true,
-    set: function (value) {
+    trim: true,
+    set: function (value: string) {
       this.set({
         slug: slugify(value, { lower: true }),
       });
+      return value;
     },
   })
   name: string;
@@ -29,7 +31,7 @@ export class Brand {
   @Prop({
     type: String,
   })
-  image: string;
+  image?: string;
 
   @Prop({
     type: Types.ObjectId,
@@ -39,7 +41,7 @@ export class Brand {
   createdBy: Types.ObjectId;
 }
 
-export type BrandDocument = HydratedDocument<User>;
+export type BrandDocument = HydratedDocument<Brand>;
 
 const brandSchema = SchemaFactory.createForClass(Brand);
 
