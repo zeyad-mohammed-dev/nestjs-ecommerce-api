@@ -1,11 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { IUser } from 'src/common';
+import { UserDocument } from "src/DB";
+import { UserRepository } from "./../../DB/repository/user.repository";
+import { Injectable } from "@nestjs/common";
 
 @Injectable()
 export class UserService {
-  constructor() {}
+  constructor(private readonly userRepository: UserRepository) {}
 
-  allUsers(): IUser[] {
-    return [{ id: 2, userName: 'ali', email: 'adfa', password: 'fadljf' }];
+  async allUsers(): Promise<UserDocument[]> {
+    const users = (await this.userRepository.find({
+      filter: {},
+    })) as unknown as UserDocument[];
+    return users;
   }
 }

@@ -1,6 +1,6 @@
 import { Controller, Get, Headers, UseInterceptors } from "@nestjs/common";
 import { UserService } from "./user.service";
-import { IUser, RoleEnum, TokenEnum } from "src/common";
+import { RoleEnum, TokenEnum } from "src/common";
 import { Auth } from "src/common/decorators/auth.decorator";
 import { User } from "src/common/decorators/credential.decorator";
 import { type UserDocument } from "src/DB";
@@ -20,18 +20,19 @@ export class UserController {
   @Auth([RoleEnum.user, RoleEnum.admin])
   @Get()
   profile(
-    @Headers() headers: any,
     @User()
     user: UserDocument,
-  ): Observable<any> {
-    console.log({ headers, user });
-
-    // return { message: "Done" };
-    return of([{ message: "Done" }]).pipe(delay(7000));
+  ): { message: string; profile: { user: UserDocument } } {
+    return { message: "Done", profile: { user } };
   }
+
+  @Auth([RoleEnum.admin])
   @Get("/all")
-  allUsers(): { message: string; data: { users: IUser[] } } {
-    const users: IUser[] = this.userService.allUsers();
+  async allUsers(): Promise<{
+    message: string;
+    data: { users: UserDocument[] };
+  }> {
+    const users = await this.userService.allUsers() as unknown as UserDocument[];
     return { message: "Done", data: { users } };
   }
 }
