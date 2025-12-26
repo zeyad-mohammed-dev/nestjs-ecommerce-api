@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { CreateBrandDto } from "./dto/create-brand.dto";
-import { Brand, UserDocument } from "src/DB";
+import { Brand, BrandDocument, UserDocument } from "src/DB";
 import { Types } from "mongoose";
 import { UpdateBrandDto } from "./dto/update-brand.dto";
 import fs from "fs/promises";
@@ -85,5 +85,15 @@ export class BrandService {
     await brand.save();
 
     return "Done";
+  }
+
+  async getAllBrands():Promise<BrandDocument[]> {
+    const brands = await this.brandRepository.find({ filter: {} }) as BrandDocument[];
+
+    if (!brands) {
+      throw new NotFoundException("No brands found");
+    }
+
+    return brands;
   }
 }

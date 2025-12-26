@@ -3,6 +3,7 @@ import { BrandService } from "./brand.service";
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   Param,
   Patch,
@@ -11,9 +12,8 @@ import {
 } from "@nestjs/common";
 import { Image, RoleEnum, UploadImage } from "src/common";
 import { User } from "src/common/decorators/credential.decorator";
-import type { UserDocument } from "src/DB";
+import type { BrandDocument, UserDocument } from "src/DB";
 import { CreateBrandDto } from "./dto/create-brand.dto";
-import type { Request } from "express";
 import { UpdateBrandDto } from "./dto/update-brand.dto";
 import { Types } from "mongoose";
 
@@ -41,7 +41,7 @@ export class BrandController {
   @Patch("/:id")
   @UploadImage()
   async updateBrand(
-    @Param('id') id: Types.ObjectId,
+    @Param("id") id: Types.ObjectId,
     @Body() body: UpdateBrandDto,
     @User() user: UserDocument,
     @Image() image?: Express.Multer.File,
@@ -49,5 +49,15 @@ export class BrandController {
     console.log({ id, body, image, user });
     await this.brandService.updateBrand({ id, body, image, user });
     return { message: "Done" };
+  }
+
+  @Auth([RoleEnum.admin , RoleEnum.user])
+  @Get("/all")
+  async getAllBrands(): Promise<{
+    message: string;
+    data: { brands: BrandDocument[] };
+  }> {
+    const brands = (await this.brandService.getAllBrands()) as BrandDocument[];
+    return { message: "Done", data: { brands } };
   }
 }
