@@ -60,6 +60,25 @@ export abstract class DatabaseRepository<
     return await doc.exec();
   }
 
+  async find({
+    filter,
+    select,
+    options,
+  }: {
+    filter?: RootFilterQuery<TRawDocument>;
+    select?: ProjectionType<TRawDocument> | undefined;
+    options?: QueryOptions<TDocument> | undefined;
+  }): Promise<Lean<TDocument>[] | TDocument[] | []> {
+    const docs = this.model.find(filter || {}).select(select || "");
+    if (options?.populate) {
+      docs.populate(options.populate as PopulateOptions[]);
+    }
+    if (options?.lean) {
+      docs.lean(options.lean);
+    }
+    return await docs.exec();
+  }
+
   async create({
     data,
     options,
