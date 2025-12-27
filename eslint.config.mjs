@@ -43,6 +43,8 @@ export default tseslint.config(
       "prefer-const": "off",
       "@typescript-eslint/no-unnecessary-type-assertion": "off",
       "@typescript-eslint/no-empty-object-type": "off",
+      "@typescript-eslint/no-redundant-type-constituents": "off",
+
       "no-case-declarations": "off",
 
       // "prettier/prettier": ["error", { endOfLine: "auto" }],

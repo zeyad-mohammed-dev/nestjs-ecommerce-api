@@ -9,6 +9,7 @@ import { CategoryModule } from "./modules/category/category.module";
 import { ProductModule } from "./modules/product/product.module";
 import { MongooseModule } from "@nestjs/mongoose";
 import { SharedAuthenticationModule } from "./common/modules/auth.module";
+import { BrandModule } from "./modules/brand/brand.module";
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { SharedAuthenticationModule } from "./common/modules/auth.module";
     UserModule,
     CategoryModule,
     ProductModule,
+    BrandModule,
   ],
   controllers: [AppController],
   providers: [AppService],
