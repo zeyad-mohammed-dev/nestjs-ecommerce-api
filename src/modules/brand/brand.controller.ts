@@ -23,7 +23,7 @@ export class BrandController {
 
   @Auth([RoleEnum.admin])
   @Post()
-  @UploadImage()
+  @UploadImage({ folder: "brands" })
   async createBrand(
     @Body() body: CreateBrandDto,
     @User() user: UserDocument,
@@ -46,12 +46,11 @@ export class BrandController {
     @User() user: UserDocument,
     @Image() image?: Express.Multer.File,
   ): Promise<{ message: string }> {
-    console.log({ id, body, image, user });
     await this.brandService.updateBrand({ id, body, image, user });
     return { message: "Done" };
   }
 
-  @Auth([RoleEnum.admin , RoleEnum.user])
+  @Auth([RoleEnum.admin, RoleEnum.user])
   @Get("/all")
   async getAllBrands(): Promise<{
     message: string;

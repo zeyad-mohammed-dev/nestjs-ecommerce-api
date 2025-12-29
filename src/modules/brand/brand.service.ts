@@ -87,8 +87,10 @@ export class BrandService {
     return "Done";
   }
 
-  async getAllBrands():Promise<BrandDocument[]> {
-    const brands = await this.brandRepository.find({ filter: {} }) as BrandDocument[];
+  async getAllBrands(): Promise<BrandDocument[]> {
+    const brands = (await this.brandRepository.find({
+      filter: {},
+    })) as BrandDocument[];
 
     if (!brands) {
       throw new NotFoundException("No brands found");
