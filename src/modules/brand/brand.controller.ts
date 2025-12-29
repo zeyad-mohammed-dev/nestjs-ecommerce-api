@@ -46,7 +46,6 @@ export class BrandController {
     @User() user: UserDocument,
     @Image() image?: Express.Multer.File,
   ): Promise<{ message: string }> {
-    console.log({ id, body, image, user });
     await this.brandService.updateBrand({ id, body, image, user });
     return { message: "Done" };
   }
