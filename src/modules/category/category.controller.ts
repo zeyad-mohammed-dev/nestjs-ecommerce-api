@@ -4,7 +4,7 @@ import { Image, RoleEnum, UploadImage } from "src/common";
 import { Auth } from "src/common/decorators/auth.decorator";
 import { CreateCategoryDto } from "./dto/create-category.dto";
 import { User } from "src/common/decorators/credential.decorator";
-import type { UserDocument } from "src/DB";
+import type { CategoryDocument, UserDocument } from "src/DB";
 
 @Controller("category")
 export class CategoryController {
@@ -24,11 +24,11 @@ export class CategoryController {
 
   @Auth([RoleEnum.admin, RoleEnum.user])
   @Get("all")
-  allCategory(): {
+  async allCategory(): Promise<{
     message: string;
-    data: { categories: { id: number; category: string }[] };
-  } {
-    const categories = this.categoryService.allCategory();
+    data: { categories: CategoryDocument[] };
+  }> {
+    const categories = await this.categoryService.allCategory();
     return { message: "Done", data: { categories } };
   }
 }

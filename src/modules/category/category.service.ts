@@ -1,5 +1,9 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
-import { CategoryRepository, UserDocument } from "src/DB";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { CategoryDocument, CategoryRepository, UserDocument } from "src/DB";
 import { CreateCategoryDto } from "./dto/create-category.dto";
 import fs from "fs/promises";
 
@@ -47,7 +51,13 @@ export class CategoryService {
 
     return "Done";
   }
-  allCategory() {
-    return [{ id: 2, category: "clothes" }];
+  async allCategory(): Promise<CategoryDocument[]> {
+    const categories = (await this.categoryRepository.find({
+      filter: {},
+    })) as CategoryDocument[];
+    if (!categories) {
+      throw new NotFoundException("No categories found");
+    }
+    return categories;
   }
 }
