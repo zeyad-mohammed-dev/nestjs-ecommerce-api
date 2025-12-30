@@ -128,4 +128,14 @@ export abstract class DatabaseRepository<
       options,
     );
   }
+
+  async findOneAndDelete({
+    filter,
+    options,
+  }: {
+    filter: RootFilterQuery<TRawDocument>;
+    options?: QueryOptions<TDocument> | null;
+  }): Promise<Lean<TDocument> | TDocument | null> {
+    return this.model.findOneAndDelete(filter, options);
+  }
 }

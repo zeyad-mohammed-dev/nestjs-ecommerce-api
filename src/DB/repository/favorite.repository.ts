@@ -7,7 +7,7 @@ import { InjectModel } from "@nestjs/mongoose";
 @Injectable()
 export class FavoriteRepository extends DatabaseRepository<Favorite> {
   constructor(
-    @InjectModel(Favorite.name)
+    @InjectModel("Favorite")
     protected override readonly model: Model<TDocument>,
   ) {
     super(model);
