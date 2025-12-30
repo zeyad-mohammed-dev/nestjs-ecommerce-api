@@ -75,8 +75,14 @@ export class ProductService {
     return "Done";
   }
 
-  findAll() {
-    return `This action returns all product`;
+  async findAll(): Promise<ProductDocument[]> {
+    const products = (await this.productRepository.find({
+      filter: {},
+    })) as ProductDocument[];
+    if (!products) {
+      throw new NotFoundException("No products found");
+    }
+    return products;
   }
 
   findOne(id: number) {
