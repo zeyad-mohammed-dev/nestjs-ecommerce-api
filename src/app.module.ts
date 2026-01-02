@@ -12,7 +12,7 @@ import { SharedAuthenticationModule } from "./common/modules/auth.module";
 import { BrandModule } from "./modules/brand/brand.module";
 import { FavoriteModule } from "./modules/favorite/favorite.module";
 import { CartModule } from "./modules/cart/cart.module";
-import { CouponModule } from './coupon/coupon.module';
+import { CouponModule } from "./modules/coupon/coupon.module";
 
 @Module({
   imports: [
