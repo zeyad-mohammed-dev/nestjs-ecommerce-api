@@ -11,7 +11,7 @@ export class CartItem {
     unique: true,
     ref: Product.name,
   })
-  product: Types.ObjectId;
+  productId: Types.ObjectId;
 
   @Prop({
     type: Number,
@@ -34,7 +34,7 @@ export class Cart {
     unique: true,
     ref: User.name,
   })
-  user: Types.ObjectId;
+  userId: Types.ObjectId;
 
   @Prop({
     type: [CartItemSchema],
