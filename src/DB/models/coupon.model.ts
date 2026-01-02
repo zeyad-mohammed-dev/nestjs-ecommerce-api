@@ -1,9 +1,9 @@
-import { HydratedDocument } from "mongoose";
+import { HydratedDocument, Types } from "mongoose";
 import { MongooseModule, Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
 @Schema({ timestamps: true })
 export class Coupon {
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, unique: true })
   code: string;
 
   @Prop({ type: Number, required: true })
@@ -17,6 +17,12 @@ export class Coupon {
 
   @Prop({ type: Number, default: 10 })
   maxUsage: number;
+  @Prop({
+    type: Types.ObjectId,
+    required: true,
+    ref: "User",
+  })
+  createdBy: Types.ObjectId;
 }
 export type CouponDocument = HydratedDocument<Coupon>;
 
