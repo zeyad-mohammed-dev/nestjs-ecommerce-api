@@ -45,7 +45,7 @@ export class Cart {
 
 export type CartDocument = HydratedDocument<Cart>;
 
-export const cartSchema = SchemaFactory.createForClass(Cart);
+const cartSchema = SchemaFactory.createForClass(Cart);
 
 export const CartModel = MongooseModule.forFeature([
   {
