@@ -10,6 +10,10 @@ import { ProductModule } from "./modules/product/product.module";
 import { MongooseModule } from "@nestjs/mongoose";
 import { SharedAuthenticationModule } from "./common/modules/auth.module";
 import { BrandModule } from "./modules/brand/brand.module";
+import { FavoriteModule } from "./modules/favorite/favorite.module";
+import { CartModule } from "./modules/cart/cart.module";
+import { OrderModule } from "./modules/order/order.module";
+import { CouponModule } from "./modules/coupon/coupon.module";
 
 @Module({
   imports: [
@@ -26,6 +30,10 @@ import { BrandModule } from "./modules/brand/brand.module";
     CategoryModule,
     ProductModule,
     BrandModule,
+    FavoriteModule,
+    CartModule,
+    OrderModule,
+    CouponModule,
   ],
   controllers: [AppController],
   providers: [AppService],
