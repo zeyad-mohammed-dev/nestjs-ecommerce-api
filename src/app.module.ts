@@ -12,6 +12,7 @@ import { SharedAuthenticationModule } from "./common/modules/auth.module";
 import { BrandModule } from "./modules/brand/brand.module";
 import { FavoriteModule } from "./modules/favorite/favorite.module";
 import { CartModule } from "./modules/cart/cart.module";
+import { OrderModule } from "./modules/order/order.module";
 import { CouponModule } from "./modules/coupon/coupon.module";
 
 @Module({
@@ -31,6 +32,7 @@ import { CouponModule } from "./modules/coupon/coupon.module";
     BrandModule,
     FavoriteModule,
     CartModule,
+    OrderModule,
     CouponModule,
   ],
   controllers: [AppController],

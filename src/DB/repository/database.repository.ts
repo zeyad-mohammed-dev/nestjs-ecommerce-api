@@ -129,6 +129,22 @@ export abstract class DatabaseRepository<
     );
   }
 
+  async findOneAndUpdate({
+    filter,
+    update,
+    options = { new: true },
+  }: {
+    filter: RootFilterQuery<TRawDocument>;
+    update: UpdateQuery<TDocument>;
+    options?: QueryOptions<TDocument> | null;
+  }): Promise<Lean<TDocument> | TDocument | null> {
+    return this.model.findOneAndUpdate(
+      filter,
+      { ...update, $inc: { __v: 1 } },
+      options,
+    );
+  }
+
   async findOneAndDelete({
     filter,
     options,

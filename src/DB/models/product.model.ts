@@ -87,6 +87,7 @@ export class Product {
 
   @Prop({
     type: Number,
+    min: 0,
     default: 0,
   })
   stock: number;
