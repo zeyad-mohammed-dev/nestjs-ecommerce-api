@@ -5,12 +5,13 @@ import { HydratedDocument, Types } from "mongoose";
 
 export enum PaymentMethodEnum {
   CASH = "cash",
-  CREDIT_CARD = "credit_card",
+  CARD = "card",
 }
 
 export enum OrderStatusEnum {
   PENDING = "pending",
   SHIPPED = "shipped",
+  PAID = "paid",
   DELIVERED = "delivered",
   CANCELLED = "cancelled",
 }
@@ -19,7 +20,6 @@ export class OrderItem {
   @Prop({
     type: Types.ObjectId,
     required: true,
-    unique: true,
     ref: Product.name,
   })
   productId: Types.ObjectId;
@@ -102,6 +102,16 @@ export class Order {
     default: OrderStatusEnum.PENDING,
   })
   orderStatus: OrderStatusEnum;
+
+  @Prop({
+    type: String,
+  })
+  intentId: string;
+
+  @Prop({
+    type: String,
+  })
+  coupon: string;
 }
 
 export type OrderDocument = HydratedDocument<Order>;

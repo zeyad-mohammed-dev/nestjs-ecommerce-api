@@ -38,7 +38,6 @@ export class AuthenticationController {
   ): Promise<{
     message: string;
   }> {
-    // console.log(body);
     await this.authenticationService.signup(body);
     return { message: "Done" };
   }
