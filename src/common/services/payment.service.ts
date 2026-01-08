@@ -32,4 +32,11 @@ export class PaymentService {
 
     return session;
   }
+
+  async createCoupon(
+    data: Stripe.CouponCreateParams,
+  ): Promise<Stripe.Response<Stripe.Coupon>> {
+    const coupon = await this.stripe.coupons.create(data);
+    return coupon;
+  }
 }

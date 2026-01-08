@@ -14,6 +14,7 @@ import { OrderStatusEnum, PaymentMethodEnum } from "src/DB/models/order.model";
 import { CheckoutParamsDto } from "./dto/checkout-params.dto";
 import { PaymentService } from "src/common";
 import { Types } from "mongoose";
+import Stripe from "stripe";
 
 @Injectable()
 export class OrderService {
@@ -141,8 +142,20 @@ export class OrderService {
       throw new NotFoundException("Order not found");
     }
 
+    let discounts: Stripe.Checkout.SessionCreateParams.Discount[] = [];
+    if (order.discount) {
+      const coupon = await this.paymentService.createCoupon({
+        duration: "once",
+        currency: "EGP",
+        amount_off: order.discount * 100,
+      });
+      discounts.push({
+        coupon: coupon.id,
+      });
+    }
     const session = await this.paymentService.createCheckoutSession({
       customer_email: user.email,
+      discounts,
       metadata: { orderId: orderId.toString() },
       line_items: order.items.map((product) => {
         return {
