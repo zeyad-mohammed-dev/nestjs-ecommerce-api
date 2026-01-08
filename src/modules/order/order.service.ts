@@ -10,7 +10,10 @@ import { OrderRepository } from "src/DB/repository/order.repository";
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { CouponDocument } from "src/DB/models/coupon.model";
 import { CartDocument, CartRepository, ProductRepository } from "src/DB";
-import { OrderStatusEnum } from "src/DB/models/order.model";
+import { OrderStatusEnum, PaymentMethodEnum } from "src/DB/models/order.model";
+import { CheckoutParamsDto } from "./dto/checkout-params.dto";
+import { PaymentService } from "src/common";
+import { Types } from "mongoose";
 
 @Injectable()
 export class OrderService {
@@ -19,6 +22,7 @@ export class OrderService {
     private readonly couponRepository: CouponRepository,
     private readonly cartRepository: CartRepository,
     private readonly productRepository: ProductRepository,
+    private readonly paymentService: PaymentService,
   ) {}
 
   async createOrder({
@@ -105,5 +109,57 @@ export class OrderService {
     await this.cartRepository.deleteOne({ filter: { userId: user._id } });
 
     return order;
+  }
+
+  async checkout({
+    user,
+    orderId,
+  }: {
+    user: UserDocument;
+    orderId: Types.ObjectId;
+  }) {
+    console.log("In the Service");
+    const order = await this.orderRepository.findOne({
+      filter: {
+        _id: orderId,
+        userId: user._id,
+        paymentMethod: PaymentMethodEnum.CARD,
+        orderStatus: OrderStatusEnum.PENDING,
+      },
+      options: {
+        populate: [
+          {
+            path: "items.productId",
+          },
+        ],
+      },
+    });
+
+    console.log({ Order: order });
+
+    if (!order) {
+      throw new NotFoundException("Order not found");
+    }
+
+    const session = await this.paymentService.createCheckoutSession({
+      customer_email: user.email,
+      metadata: { orderId: orderId.toString() },
+      line_items: order.items.map((product) => {
+        return {
+          quantity: product.quantity,
+          price_data: {
+            currency: "EGP",
+            product_data: {
+              name: (product.productId as unknown as Product).name,
+            },
+            unit_amount:
+              (product.productId as unknown as Product).salePrice * 100,
+          },
+        };
+      }),
+    });
+    console.log({ session });
+
+    return session;
   }
 }

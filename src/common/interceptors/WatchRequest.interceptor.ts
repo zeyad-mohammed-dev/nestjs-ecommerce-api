@@ -18,7 +18,7 @@ export class LoggingInterceptor implements NestInterceptor {
       .handle()
 
       .pipe(
-        timeout(5000),
+        timeout(10000),
         catchError((err) => {
           if (err instanceof TimeoutError) {
             return throwError(() => new RequestTimeoutException());

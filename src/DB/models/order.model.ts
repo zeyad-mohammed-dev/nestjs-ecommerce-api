@@ -5,7 +5,7 @@ import { HydratedDocument, Types } from "mongoose";
 
 export enum PaymentMethodEnum {
   CASH = "cash",
-  CREDIT_CARD = "credit_card",
+  CARD = "card",
 }
 
 export enum OrderStatusEnum {
