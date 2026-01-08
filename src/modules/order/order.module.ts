@@ -9,6 +9,7 @@ import { OrderController } from "./order.controller";
 import { OrderService } from "./order.service";
 import { CartModel } from "./../../DB/models/cart.model";
 import { ProductModel } from "./../../DB/models/product.model";
+import { PaymentService } from "src/common";
 
 @Module({
   imports: [OrderModel, CouponModel, CartModel, ProductModel],
@@ -19,6 +20,7 @@ import { ProductModel } from "./../../DB/models/product.model";
     CouponRepository,
     CartRepository,
     ProductRepository,
+    PaymentService,
   ],
 })
 export class OrderModule {}

@@ -105,7 +105,6 @@ export class AuthenticationService {
         populate: [{ path: "otp", match: { type: OtpEnum.ConfirmEmail } }],
       },
     });
-    console.log(user);
     if (!user) {
       throw new NotFoundException("Fail to find matching account");
     }
@@ -128,7 +127,6 @@ export class AuthenticationService {
         populate: [{ path: "otp", match: { type: OtpEnum.ConfirmEmail } }],
       },
     });
-    // console.log(user);
     if (!user) {
       throw new NotFoundException("Fail to find matching account");
     }

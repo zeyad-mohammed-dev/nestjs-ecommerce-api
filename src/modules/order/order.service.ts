@@ -10,7 +10,12 @@ import { OrderRepository } from "src/DB/repository/order.repository";
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { CouponDocument } from "src/DB/models/coupon.model";
 import { CartDocument, CartRepository, ProductRepository } from "src/DB";
-import { OrderStatusEnum } from "src/DB/models/order.model";
+import { OrderStatusEnum, PaymentMethodEnum } from "src/DB/models/order.model";
+import { CheckoutParamsDto } from "./dto/checkout-params.dto";
+import { PaymentService } from "src/common";
+import { Types } from "mongoose";
+import Stripe from "stripe";
+import type { Request } from "express";
 
 @Injectable()
 export class OrderService {
@@ -19,8 +24,30 @@ export class OrderService {
     private readonly couponRepository: CouponRepository,
     private readonly cartRepository: CartRepository,
     private readonly productRepository: ProductRepository,
+    private readonly paymentService: PaymentService,
   ) {}
 
+  async webhook(req: Request) {
+    const event = await this.paymentService.webhook(req);
+
+    const orderId = (event.data.object.metadata as { orderId: string }).orderId;
+    const order = await this.orderRepository.findOneAndUpdate({
+      filter: {
+        _id: Types.ObjectId.createFromHexString(orderId),
+        paymentMethod: PaymentMethodEnum.CARD,
+        orderStatus: OrderStatusEnum.PENDING,
+      },
+      update: { orderStatus: OrderStatusEnum.PAID },
+    });
+
+    if (!order) {
+      throw new NotFoundException("Order not found");
+    }
+
+    await this.paymentService.confirmPaymentIntent(order.intentId);
+
+    return "Done";
+  }
   async createOrder({
     user,
     orderData,
@@ -98,6 +125,7 @@ export class OrderService {
           phone: orderData.phone,
           paymentMethod: orderData.paymentMethod,
           orderStatus: OrderStatusEnum.PENDING,
+          coupon: code,
         },
       ],
     });
@@ -105,5 +133,119 @@ export class OrderService {
     await this.cartRepository.deleteOne({ filter: { userId: user._id } });
 
     return order;
+  }
+
+  async cancelOrder({
+    user,
+    orderId,
+  }: {
+    user: UserDocument;
+    orderId: Types.ObjectId;
+  }) {
+    const order = await this.orderRepository.findOneAndUpdate({
+      filter: {
+        _id: orderId,
+        orderStatus: { $ne: OrderStatusEnum.CANCELLED },
+      },
+      update: { orderStatus: OrderStatusEnum.CANCELLED },
+    });
+    if (!order) {
+      throw new NotFoundException("Order not found");
+    }
+
+    for (const item of order.items) {
+      const product = (await this.productRepository.findById({
+        id: item.productId,
+      })) as ProductDocument;
+      if (!product) {
+        throw new NotFoundException("Product not found");
+      }
+      product.stock += item.quantity;
+      await product.save();
+    }
+
+    if (order.coupon) {
+      const coupon = (await this.couponRepository.findOne({
+        filter: { code: order.coupon },
+      })) as CouponDocument;
+      if (!coupon) {
+        throw new NotFoundException("Coupon not found");
+      }
+      coupon.totalUsage -= 1;
+      await coupon.save();
+    }
+
+    if (order.paymentMethod == PaymentMethodEnum.CARD) {
+      await this.paymentService.refund(order.intentId);
+    }
+    return order;
+  }
+
+  async checkout({
+    user,
+    orderId,
+  }: {
+    user: UserDocument;
+    orderId: Types.ObjectId;
+  }) {
+    const order = await this.orderRepository.findOne({
+      filter: {
+        _id: orderId,
+        userId: user._id,
+        paymentMethod: PaymentMethodEnum.CARD,
+        orderStatus: OrderStatusEnum.PENDING,
+      },
+      options: {
+        populate: [
+          {
+            path: "items.productId",
+          },
+        ],
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException("Order not found");
+    }
+
+    let discounts: Stripe.Checkout.SessionCreateParams.Discount[] = [];
+    if (order.discount) {
+      const coupon = await this.paymentService.createCoupon({
+        duration: "once",
+        currency: "EGP",
+        amount_off: order.discount * 100,
+      });
+      discounts.push({
+        coupon: coupon.id,
+      });
+    }
+    const session = await this.paymentService.createCheckoutSession({
+      customer_email: user.email,
+      discounts,
+      metadata: { orderId: orderId.toString() },
+      line_items: order.items.map((product) => {
+        return {
+          quantity: product.quantity,
+          price_data: {
+            currency: "EGP",
+            product_data: {
+              name: (product.productId as unknown as Product).name,
+            },
+            unit_amount:
+              (product.productId as unknown as Product).salePrice * 100,
+          },
+        };
+      }),
+    });
+
+    const intent = await this.paymentService.createPaymentIntent({
+      amount: order.total,
+      currency: "EGP",
+    });
+
+    order.intentId = intent.id;
+    await order.save();
+
+    return session;
   }
 }
