@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Param,
+  Patch,
   Post,
   Req,
   UsePipes,
@@ -50,13 +51,24 @@ export class OrderController {
     @Param() params: CheckoutParamsDto,
     @User() user: UserDocument,
   ) {
-    console.log("In the Chekcout controlloer");
     const session = await this.orderService.checkout({
       orderId: params.orderId,
       user,
     });
-    console.log("After Service");
 
     return { message: "Done", data: { session } };
+  }
+
+  @Auth([RoleEnum.admin])
+  @Patch(":orderId")
+  async cancelOrder(
+    @Param() params: CheckoutParamsDto,
+    @User() user: UserDocument,
+  ) {
+    const order = await this.orderService.cancelOrder({
+      orderId: params.orderId,
+      user,
+    });
+    return { message: "Done", data: { order } };
   }
 }

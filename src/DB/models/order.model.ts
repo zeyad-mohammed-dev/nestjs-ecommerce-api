@@ -107,6 +107,11 @@ export class Order {
     type: String,
   })
   intentId: string;
+
+  @Prop({
+    type: String,
+  })
+  coupon: string;
 }
 
 export type OrderDocument = HydratedDocument<Order>;

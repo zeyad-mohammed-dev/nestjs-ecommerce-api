@@ -125,12 +125,59 @@ export class OrderService {
           phone: orderData.phone,
           paymentMethod: orderData.paymentMethod,
           orderStatus: OrderStatusEnum.PENDING,
+          coupon: code,
         },
       ],
     });
 
     await this.cartRepository.deleteOne({ filter: { userId: user._id } });
 
+    return order;
+  }
+
+  async cancelOrder({
+    user,
+    orderId,
+  }: {
+    user: UserDocument;
+    orderId: Types.ObjectId;
+  }) {
+    const order = await this.orderRepository.findOneAndUpdate({
+      filter: {
+        _id: orderId,
+        orderStatus: { $ne: OrderStatusEnum.CANCELLED },
+      },
+      update: { orderStatus: OrderStatusEnum.CANCELLED },
+    });
+    if (!order) {
+      throw new NotFoundException("Order not found");
+    }
+
+    for (const item of order.items) {
+      const product = (await this.productRepository.findById({
+        id: item.productId,
+      })) as ProductDocument;
+      if (!product) {
+        throw new NotFoundException("Product not found");
+      }
+      product.stock += item.quantity;
+      await product.save();
+    }
+
+    if (order.coupon) {
+      const coupon = (await this.couponRepository.findOne({
+        filter: { code: order.coupon },
+      })) as CouponDocument;
+      if (!coupon) {
+        throw new NotFoundException("Coupon not found");
+      }
+      coupon.totalUsage -= 1;
+      await coupon.save();
+    }
+
+    if (order.paymentMethod == PaymentMethodEnum.CARD) {
+      await this.paymentService.refund(order.intentId);
+    }
     return order;
   }
 
@@ -141,7 +188,6 @@ export class OrderService {
     user: UserDocument;
     orderId: Types.ObjectId;
   }) {
-    console.log("In the Service");
     const order = await this.orderRepository.findOne({
       filter: {
         _id: orderId,
@@ -158,8 +204,6 @@ export class OrderService {
       },
     });
 
-    console.log({ Order: order });
-
     if (!order) {
       throw new NotFoundException("Order not found");
     }
@@ -175,7 +219,6 @@ export class OrderService {
         coupon: coupon.id,
       });
     }
-    console.log({ orderId: orderId.toString() });
     const session = await this.paymentService.createCheckoutSession({
       customer_email: user.email,
       discounts,
@@ -194,7 +237,6 @@ export class OrderService {
         };
       }),
     });
-    console.log({ session });
 
     const intent = await this.paymentService.createPaymentIntent({
       amount: order.total,

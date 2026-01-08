@@ -24,7 +24,6 @@ export class PaymentService {
   }: Stripe.Checkout.SessionCreateParams): Promise<
     Stripe.Response<Stripe.Checkout.Session>
   > {
-    console.log("Payment Service");
     const session = await this.stripe.checkout.sessions.create({
       customer_email,
       cancel_url,
@@ -52,7 +51,6 @@ export class PaymentService {
     },
   ): Promise<Stripe.Response<Stripe.PaymentMethod>> {
     const method = await this.stripe.paymentMethods.create(data);
-    console.log({ method });
 
     return method;
   }
@@ -61,13 +59,6 @@ export class PaymentService {
     id: string,
   ): Promise<Stripe.Response<Stripe.PaymentIntent>> {
     const intent = await this.stripe.paymentIntents.retrieve(id);
-    if (intent?.status != "requires_confirmation") {
-      throw new NotFoundException(
-        "Fail to find matching payment intent intent",
-      );
-    }
-    console.log({ intent });
-
     return intent;
   }
 
@@ -75,6 +66,11 @@ export class PaymentService {
     id: string,
   ): Promise<Stripe.Response<Stripe.PaymentIntent>> {
     const intent = await this.retrievePaymentIntent(id);
+    if (intent?.status != "requires_confirmation") {
+      throw new NotFoundException(
+        "Fail to find matching payment intent intent",
+      );
+    }
     const confirm = await this.stripe.paymentIntents.confirm(intent.id, {
       payment_method: "pm_card_visa",
     });
@@ -82,9 +78,19 @@ export class PaymentService {
     if (confirm.status != "succeeded") {
       throw new BadRequestException("Fail to confirm this intent");
     }
-    console.log({ confirm });
 
     return confirm;
+  }
+
+  async refund(id: string): Promise<Stripe.Response<Stripe.Refund>> {
+    const intent = await this.retrievePaymentIntent(id);
+    if (intent?.status != "succeeded") {
+      throw new BadRequestException("Fail to refund this intent");
+    }
+    const refund = await this.stripe.refunds.create({
+      payment_intent: intent.id,
+    });
+    return refund;
   }
 
   async createPaymentIntent(
@@ -101,7 +107,6 @@ export class PaymentService {
         allow_redirects: "never",
       },
     });
-    console.log(intent);
 
     return intent;
   }
