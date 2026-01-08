@@ -1,4 +1,5 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
+import type { Request } from "express";
 import Stripe from "stripe";
 
 @Injectable()
@@ -38,5 +39,23 @@ export class PaymentService {
   ): Promise<Stripe.Response<Stripe.Coupon>> {
     const coupon = await this.stripe.coupons.create(data);
     return coupon;
+  }
+
+  async webhook(req: Request): Promise<Stripe.CheckoutSessionCompletedEvent> {
+    const endpointSecret = process.env.STRIPE_HOOK_SECRET as string;
+
+    const sig = req.headers["stripe-signature"];
+    let event: Stripe.Event;
+    event = this.stripe.webhooks.constructEvent(
+      req.body,
+      sig as string,
+      endpointSecret,
+    );
+
+    // Handle the event
+    if (event.type != "checkout.session.completed") {
+      throw new BadRequestException("Fail to pay this session");
+    }
+    return event;
   }
 }

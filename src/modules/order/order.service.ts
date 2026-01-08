@@ -15,6 +15,7 @@ import { CheckoutParamsDto } from "./dto/checkout-params.dto";
 import { PaymentService } from "src/common";
 import { Types } from "mongoose";
 import Stripe from "stripe";
+import type { Request } from "express";
 
 @Injectable()
 export class OrderService {
@@ -26,6 +27,24 @@ export class OrderService {
     private readonly paymentService: PaymentService,
   ) {}
 
+  async webhook(req: Request) {
+    const event = await this.paymentService.webhook(req);
+
+    const orderId = (event.data.object.metadata as { orderId: string }).orderId;
+    const order = await this.orderRepository.findOneAndUpdate({
+      filter: {
+        _id: Types.ObjectId.createFromHexString(orderId),
+        paymentMethod: PaymentMethodEnum.CARD,
+        orderStatus: OrderStatusEnum.PENDING,
+      },
+      update: { orderStatus: OrderStatusEnum.PAID },
+    });
+
+    if (!order) {
+      throw new NotFoundException("Order not found");
+    }
+    return "Done";
+  }
   async createOrder({
     user,
     orderData,
@@ -153,6 +172,7 @@ export class OrderService {
         coupon: coupon.id,
       });
     }
+    console.log({ orderId: orderId.toString() });
     const session = await this.paymentService.createCheckoutSession({
       customer_email: user.email,
       discounts,

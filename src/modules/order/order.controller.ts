@@ -4,6 +4,7 @@ import {
   Controller,
   Param,
   Post,
+  Req,
   UsePipes,
   ValidationPipe,
 } from "@nestjs/common";
@@ -14,6 +15,7 @@ import { User } from "src/common/decorators/credential.decorator";
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { CheckoutParamsDto } from "./dto/checkout-params.dto";
 import { Types } from "mongoose";
+import type { Request } from "express";
 
 @UsePipes(
   new ValidationPipe({
@@ -26,6 +28,12 @@ import { Types } from "mongoose";
 @Controller("order")
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
+
+  @Post("webhook")
+  async webhook(@Req() req: Request) {
+    await this.orderService.webhook(req);
+    return { message: "Done" };
+  }
 
   @Auth([RoleEnum.admin, RoleEnum.user])
   @Post()
