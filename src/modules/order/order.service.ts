@@ -43,6 +43,9 @@ export class OrderService {
     if (!order) {
       throw new NotFoundException("Order not found");
     }
+
+    await this.paymentService.confirmPaymentIntent(order.intentId);
+
     return "Done";
   }
   async createOrder({
@@ -192,6 +195,14 @@ export class OrderService {
       }),
     });
     console.log({ session });
+
+    const intent = await this.paymentService.createPaymentIntent({
+      amount: order.total,
+      currency: "EGP",
+    });
+
+    order.intentId = intent.id;
+    await order.save();
 
     return session;
   }

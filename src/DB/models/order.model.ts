@@ -20,7 +20,6 @@ export class OrderItem {
   @Prop({
     type: Types.ObjectId,
     required: true,
-    unique: true,
     ref: Product.name,
   })
   productId: Types.ObjectId;
@@ -103,6 +102,11 @@ export class Order {
     default: OrderStatusEnum.PENDING,
   })
   orderStatus: OrderStatusEnum;
+
+  @Prop({
+    type: String,
+  })
+  intentId: string;
 }
 
 export type OrderDocument = HydratedDocument<Order>;
